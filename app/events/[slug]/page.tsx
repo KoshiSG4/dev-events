@@ -94,7 +94,7 @@ const EventDetailsPage = async ({
 		organizer,
 	} = event;
 
-	if (!description) return notFound;
+	if (!description) return notFound();
 
 	const bookings = 10;
 

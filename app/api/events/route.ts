@@ -1,5 +1,4 @@
 import connectDB from '@/lib/monogodb';
-import { connect } from 'http2';
 import { NextRequest, NextResponse } from 'next/server';
 import Event from '@/database/event.model';
 import { v2 as cloudinary } from 'cloudinary';
@@ -14,21 +13,20 @@ export async function POST(req: NextRequest) {
 
 		try {
 			event = Object.fromEntries(formData.entries());
-		} catch (error) {
+		} catch (e) {
 			return NextResponse.json(
 				{ message: 'Invalid JSON data format' },
 				{ status: 400 }
 			);
 		}
 
-		const file = formData.get('image') as File | null;
+		const file = formData.get('image') as File;
 
-		if (!file) {
+		if (!file)
 			return NextResponse.json(
 				{ message: 'Image file is required' },
 				{ status: 400 }
 			);
-		}
 
 		let tags = JSON.parse(formData.get('tags') as string);
 		let agenda = JSON.parse(formData.get('agenda') as string);
@@ -39,9 +37,11 @@ export async function POST(req: NextRequest) {
 		const uploadResult = await new Promise((resolve, reject) => {
 			cloudinary.uploader
 				.upload_stream(
-					{ resource_type: 'image', folder: 'DevEvents' },
-					(error, result) => {
-						resolve(result);
+					{ resource_type: 'image', folder: 'DevEvent' },
+					(error, results) => {
+						if (error) return reject(error);
+
+						resolve(results);
 					}
 				)
 				.end(buffer);
@@ -56,18 +56,15 @@ export async function POST(req: NextRequest) {
 		});
 
 		return NextResponse.json(
-			{
-				message: 'Event created successfully',
-				event: createdEvent,
-			},
+			{ message: 'Event created successfully', event: createdEvent },
 			{ status: 201 }
 		);
-	} catch (error) {
-		console.error(error);
+	} catch (e) {
+		console.error(e);
 		return NextResponse.json(
 			{
-				message: 'Event Creation failed',
-				error: error instanceof Error ? error.message : 'Unkown',
+				message: 'Event Creation Failed',
+				error: e instanceof Error ? e.message : 'Unknown',
 			},
 			{ status: 500 }
 		);
@@ -81,15 +78,12 @@ export async function GET() {
 		const events = await Event.find().sort({ createdAt: -1 });
 
 		return NextResponse.json(
-			{ message: 'Events fetched successfully', events: [] },
+			{ message: 'Events fetched successfully', events },
 			{ status: 200 }
 		);
-	} catch (error) {
+	} catch (e) {
 		return NextResponse.json(
-			{
-				message: 'Failed to fetch events',
-				error: error instanceof Error ? error.message : 'Unkown',
-			},
+			{ message: 'Event fetching failed', error: e },
 			{ status: 500 }
 		);
 	}

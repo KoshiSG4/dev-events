@@ -3,7 +3,9 @@ import connectDB from '@/lib/monogodb';
 import { NextRequest, NextResponse } from 'next/server';
 
 type RouteParams = {
-	params: Promise<{ slug: string }>;
+	params: Promise<{
+		slug: string;
+	}>;
 };
 
 export async function GET(
@@ -16,7 +18,7 @@ export async function GET(
 		const { slug } = await params;
 		if (!slug || typeof slug !== 'string' || slug.trim() === '') {
 			return NextResponse.json(
-				{ message: 'Invalid slug parameter' },
+				{ message: 'Invalid or missing slug parameter' },
 				{ status: 400 }
 			);
 		}
@@ -27,7 +29,7 @@ export async function GET(
 
 		if (!event) {
 			return NextResponse.json(
-				{ message: `Event with slug ${sanitizedSlug} not found` },
+				{ message: `Event with slug '${sanitizedSlug}' not found` },
 				{ status: 404 }
 			);
 		}
@@ -38,7 +40,7 @@ export async function GET(
 		);
 	} catch (error) {
 		if (process.env.NODE_ENV === 'development') {
-			console.error('Error fetching event by slug:', error);
+			console.error('Error fetching events by slug:', error);
 		}
 
 		if (error instanceof Error) {
